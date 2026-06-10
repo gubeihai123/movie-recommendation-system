@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="static/css/app.css">
 </head>
 <body>
+  <canvas id="particleCanvas" aria-hidden="true"></canvas>
   <header class="navbar">
     <button class="brand brand-button" type="button" data-view="home" aria-label="MovieMind CF 首页">
       <span class="brand-mark"></span>
@@ -181,7 +182,7 @@
       <section class="panel catalog-panel">
         <div class="movie-grid catalog-grid" id="movieGrid"></div>
         <div class="load-more-row">
-          <button class="secondary-btn" id="loadMoreMoviesBtn" type="button">加载更多</button>
+          <button class="secondary-btn" id="loadMoreMoviesBtn" type="button" hidden>加载更多</button>
         </div>
       </section>
     </section>
