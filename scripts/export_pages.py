@@ -10,6 +10,7 @@ DOCS = ROOT / "docs"
 def render_static_index() -> str:
     html = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
     html = html.replace("{{ url_for('static', filename='css/app.css') }}", "static/css/app.css")
+    html = html.replace("{{ url_for('static', filename='js/tsparticles.bundle.min.js') }}", "static/js/tsparticles.bundle.min.js")
     html = html.replace("{{ url_for('static', filename='js/app.js') }}", "static/js/app.js")
     html = html.replace(
         '<script src="static/js/app.js"></script>',

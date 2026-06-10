@@ -1,4 +1,4 @@
-const state = {
+﻿const state = {
   user: null,
   admin: null,
   categories: [],
@@ -141,78 +141,71 @@ function hydratePosters(root = document) {
 }
 
 function initParticleBackground() {
-  const canvas = $("#particleCanvas");
-  if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!$("#particleCanvas") || !window.tsParticles || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  const context = canvas.getContext("2d");
-  const pointer = { x: 0.5, y: 0.5 };
-  const particles = [];
-  const glyphs = ["0", "1", "+", "×", "·"];
-  let width = 0;
-  let height = 0;
-  let frame = 0;
-
-  function resize() {
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = Math.floor(width * ratio);
-    canvas.height = Math.floor(height * ratio);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const targetCount = Math.min(120, Math.max(56, Math.floor((width * height) / 15000)));
-    particles.length = 0;
-    for (let index = 0; index < targetCount; index += 1) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.18,
-        size: 1 + Math.random() * 1.8,
-        alpha: 0.12 + Math.random() * 0.22,
-        glyph: glyphs[index % glyphs.length],
-      });
-    }
-  }
-
-  function draw() {
-    frame += 1;
-    context.clearRect(0, 0, width, height);
-    const driftX = (pointer.x - 0.5) * 0.28;
-    const driftY = (pointer.y - 0.5) * 0.28;
-    particles.forEach((particle, index) => {
-      particle.x += particle.vx + driftX;
-      particle.y += particle.vy + driftY;
-      if (particle.x < -20) particle.x = width + 20;
-      if (particle.x > width + 20) particle.x = -20;
-      if (particle.y < -20) particle.y = height + 20;
-      if (particle.y > height + 20) particle.y = -20;
-
-      const pulse = 0.04 * Math.sin((frame + index * 9) / 34);
-      context.globalAlpha = Math.max(0.04, particle.alpha + pulse);
-      if (index % 5 === 0) {
-        context.fillStyle = "#8b5cf6";
-        context.font = "12px Consolas, monospace";
-        context.fillText(particle.glyph, particle.x, particle.y);
-      } else {
-        context.fillStyle = index % 2 === 0 ? "#00eaff" : "#f8fafc";
-        context.beginPath();
-        context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        context.fill();
-      }
-    });
-    context.globalAlpha = 1;
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener("resize", resize);
-  window.addEventListener("pointermove", (event) => {
-    pointer.x = event.clientX / Math.max(1, width);
-    pointer.y = event.clientY / Math.max(1, height);
-  }, { passive: true });
-  resize();
-  draw();
+  window.tsParticles.load({
+    id: "particleCanvas",
+    options: {
+      fpsLimit: 60,
+      detectRetina: true,
+      background: { color: "transparent" },
+      fullScreen: { enable: false },
+      particles: {
+        number: {
+          value: 148,
+          density: { enable: true, area: 700 },
+        },
+        color: {
+          value: ["#00eaff", "#8b5cf6", "#38f8a0", "#ff4fd8", "#f8fafc"],
+        },
+        shape: {
+          type: ["circle", "char"],
+          options: {
+            char: {
+              value: ["0", "1", "+", "*"],
+              font: "Consolas",
+              style: "",
+              weight: "400",
+            },
+          },
+        },
+        opacity: {
+          value: { min: 0.36, max: 0.9 },
+          animation: { enable: true, speed: 1, minimumValue: 0.24, sync: false },
+        },
+        size: {
+          value: { min: 1.4, max: 5.2 },
+          animation: { enable: true, speed: 1.9, minimumValue: 0.9, sync: false },
+        },
+        links: {
+          enable: true,
+          distance: 148,
+          color: "#00eaff",
+          opacity: 0.34,
+          width: 1.1,
+        },
+        move: {
+          enable: true,
+          speed: 0.82,
+          direction: "none",
+          random: true,
+          straight: false,
+          outModes: { default: "out" },
+        },
+      },
+      interactivity: {
+        detectsOn: "window",
+        events: {
+          onHover: { enable: true, mode: ["grab", "repulse"] },
+          resize: true,
+        },
+        modes: {
+          grab: { distance: 230, links: { opacity: 0.62 } },
+          repulse: { distance: 118, duration: 0.35 },
+        },
+      },
+    },
+  }).catch(() => {});
 }
 
 function movieCard(item, options = {}) {

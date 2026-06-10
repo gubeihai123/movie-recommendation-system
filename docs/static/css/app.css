@@ -52,7 +52,9 @@ body::before {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  opacity: 0.58;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 8px rgba(0, 234, 255, 0.46));
+  mix-blend-mode: screen;
 }
 
 button,
@@ -63,6 +65,7 @@ select {
 
 button {
   cursor: pointer;
+  transform-origin: center;
 }
 
 .navbar {
@@ -97,6 +100,12 @@ button {
   border: 0;
   background: transparent;
   cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.brand-button:hover {
+  transform: scale(1.055);
+  filter: brightness(1.14);
 }
 
 .brand-mark {
@@ -126,6 +135,7 @@ button {
   padding: 0 6px;
   border: 0;
   background: transparent;
+  transition: transform 0.18s ease, filter 0.18s ease, color 0.18s ease, text-shadow 0.18s ease;
 }
 
 .nav-links a:hover,
@@ -133,6 +143,11 @@ button {
 .nav-tab.active {
   color: var(--cyan);
   text-shadow: 0 0 14px rgba(0, 234, 255, 0.75);
+}
+
+.nav-tab:hover {
+  transform: scale(1.055);
+  filter: brightness(1.14);
 }
 
 .top-actions {
@@ -257,7 +272,7 @@ button {
   border-radius: 8px;
   border: 0;
   min-height: 40px;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, filter 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .primary-btn {
@@ -293,8 +308,26 @@ button {
 .secondary-btn:hover,
 .login-btn:hover,
 .ghost-btn:hover,
-.icon-btn:hover {
-  transform: translateY(-2px);
+.icon-btn:hover,
+.link-btn:hover {
+  transform: translateY(-2px) scale(1.045);
+  filter: brightness(1.14);
+}
+
+.primary-btn:hover {
+  box-shadow: 0 0 34px rgba(0, 234, 255, 0.42), 0 10px 26px rgba(56, 248, 160, 0.18);
+}
+
+.secondary-btn:hover,
+.ghost-btn:hover,
+.icon-btn:hover,
+.link-btn:hover {
+  border-color: rgba(0, 234, 255, 0.48);
+  box-shadow: 0 0 24px rgba(0, 234, 255, 0.18);
+}
+
+.login-btn:hover {
+  box-shadow: 0 0 26px rgba(0, 234, 255, 0.25);
 }
 
 .small {
@@ -601,11 +634,15 @@ meter::-webkit-meter-optimum-value {
   border-radius: 8px;
   color: #cbd5e1;
   background: rgba(15, 23, 42, 0.9);
+  transition: transform 0.18s ease, filter 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
 
 .mini-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  filter: brightness(1.13);
   color: var(--cyan);
   border-color: rgba(0, 234, 255, 0.45);
+  box-shadow: 0 0 22px rgba(0, 234, 255, 0.16);
 }
 
 .explain-list {
