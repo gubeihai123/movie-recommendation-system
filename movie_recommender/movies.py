@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Blueprint, jsonify, request
 from mysql.connector import IntegrityError
 
@@ -60,6 +62,31 @@ def list_movies():
         tuple(params),
     )
     return jsonify({"items": items, "page": page, "page_size": page_size, "total": total["total"]})
+
+
+@bp.get("/movies/daily")
+def daily_movie():
+    total = fetch_one("SELECT COUNT(*) AS total FROM movies WHERE status = 'online'")
+    movie_total = int(total["total"] or 0)
+    if movie_total <= 0:
+        return jsonify({"movie": None})
+
+    day_seed = date.today().toordinal()
+    offset = day_seed % movie_total
+    movie = fetch_one(
+        """
+        SELECT m.movie_id, m.title, m.description, m.poster_url,
+               m.avg_rating, m.rating_count, m.view_count, m.created_at,
+               c.category_id, c.category_name
+        FROM movies m
+        JOIN categories c ON c.category_id = m.category_id
+        WHERE m.status = 'online'
+        ORDER BY m.movie_id ASC
+        LIMIT 1 OFFSET %s
+        """,
+        (offset,),
+    )
+    return jsonify({"movie": movie})
 
 
 @bp.get("/movies/<int:movie_id>")

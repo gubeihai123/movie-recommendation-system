@@ -419,17 +419,8 @@ function dailyMovieHtml(item) {
 }
 
 async function loadDailyMovie() {
-  const summary = await api("/api/movies?page=1&page_size=1");
-  const total = Number(summary.total || 0);
-  if (!total) {
-    $("#dailyMovieCard").innerHTML = empty("暂无可展示电影");
-    return;
-  }
-  const daySeed = Math.floor(Date.now() / 86400000);
-  const page = (daySeed % total) + 1;
-  const data = await api(`/api/movies?page=${page}&page_size=1`);
-  const movie = data.items?.[0] || summary.items?.[0];
-  $("#dailyMovieCard").innerHTML = movie ? dailyMovieHtml(movie) : empty("暂无可展示电影");
+  const data = await api("/api/movies/daily");
+  $("#dailyMovieCard").innerHTML = data.movie ? dailyMovieHtml(data.movie) : empty("暂无可展示电影");
 }
 
 async function loadHot() {
