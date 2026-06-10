@@ -299,6 +299,22 @@
     </div>
   </div>
 
+  <div class="modal" id="ratingModal" aria-hidden="true">
+    <div class="modal-card rating-modal-card" role="dialog" aria-modal="true" aria-labelledby="ratingTitle">
+      <button class="close-btn" id="closeRatingBtn" type="button" aria-label="关闭">×</button>
+      <span class="eyebrow">Rate Movie</span>
+      <h2 id="ratingTitle">选择评分</h2>
+      <div class="rating-stars" id="ratingStars" aria-label="电影评分">
+        <button class="rating-star" type="button" data-score="1" aria-label="1 星">★</button>
+        <button class="rating-star" type="button" data-score="2" aria-label="2 星">★</button>
+        <button class="rating-star" type="button" data-score="3" aria-label="3 星">★</button>
+        <button class="rating-star" type="button" data-score="4" aria-label="4 星">★</button>
+        <button class="rating-star" type="button" data-score="5" aria-label="5 星">★</button>
+      </div>
+      <p class="rating-note" id="ratingNote">移动到星星上预览分数，点击确认评分。</p>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status"></div>
 
   <script src="{{ url_for('static', filename='js/tsparticles.bundle.min.js') }}"></script>

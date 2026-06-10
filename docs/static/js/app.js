@@ -7,6 +7,7 @@
   moviePageSize: 100,
   movieTotal: 0,
   currentMovieId: null,
+  pendingRatingMovieId: null,
   movieLoaded: false,
 };
 
@@ -569,6 +570,28 @@ function closeLogin() {
   $("#loginModal").setAttribute("aria-hidden", "true");
 }
 
+function setRatingPreview(score = 0) {
+  const value = Number(score || 0);
+  $$(".rating-star").forEach((star) => {
+    star.classList.toggle("filled", Number(star.dataset.score) <= value);
+  });
+  $("#ratingNote").textContent = value ? `${value} 星` : "移动到星星上预览分数，点击确认评分。";
+}
+
+function openRatingModal(movieId) {
+  state.pendingRatingMovieId = movieId;
+  setRatingPreview(0);
+  $("#ratingModal").classList.add("open");
+  $("#ratingModal").setAttribute("aria-hidden", "false");
+}
+
+function closeRatingModal() {
+  state.pendingRatingMovieId = null;
+  setRatingPreview(0);
+  $("#ratingModal").classList.remove("open");
+  $("#ratingModal").setAttribute("aria-hidden", "true");
+}
+
 async function loginWithAutoRole(payload) {
   try {
     const data = await api("/api/auth/login", {
@@ -589,6 +612,25 @@ async function loginWithAutoRole(payload) {
   }
 }
 
+async function refreshAfterMovieMutation() {
+  if (state.currentView === "detail" && state.currentMovieId) {
+    await openMovieDetail(state.currentMovieId);
+  } else {
+    await loadMovies();
+  }
+  await Promise.all([loadBehaviors(), loadRecommendations(true), loadHot()]);
+}
+
+async function submitRating(movieId, score) {
+  await api(`/api/movies/${movieId}/rating`, {
+    method: "POST",
+    body: JSON.stringify({ score: Number(score) }),
+  });
+  closeRatingModal();
+  toast(`已评分 ${score} 星`);
+  await refreshAfterMovieMutation();
+}
+
 async function handleMovieAction(target) {
   const action = target.dataset.action;
   const id = target.dataset.id;
@@ -603,24 +645,14 @@ async function handleMovieAction(target) {
     return;
   }
   if (action === "rate") {
-    const score = window.prompt("请输入 1-5 分", "5");
-    if (!score) return;
-    await api(`/api/movies/${id}/rating`, {
-      method: "POST",
-      body: JSON.stringify({ score: Number(score) }),
-    });
-    toast("评分已保存");
+    openRatingModal(id);
+    return;
   }
   if (action === "favorite") {
     await api(`/api/movies/${id}/favorite`, { method: "POST", body: "{}" });
     toast("已收藏");
   }
-  if (state.currentView === "detail" && state.currentMovieId) {
-    await openMovieDetail(state.currentMovieId);
-  } else {
-    await loadMovies();
-  }
-  await Promise.all([loadBehaviors(), loadRecommendations(true), loadHot()]);
+  await refreshAfterMovieMutation();
 }
 
 document.addEventListener("click", async (event) => {
@@ -676,6 +708,38 @@ document.addEventListener("click", async (event) => {
 
 $("#loginModal").addEventListener("click", (event) => {
   if (event.target.id === "loginModal") closeLogin();
+});
+
+$("#ratingModal").addEventListener("click", (event) => {
+  if (event.target.id === "ratingModal" || event.target.id === "closeRatingBtn") {
+    closeRatingModal();
+  }
+});
+
+$("#ratingStars").addEventListener("pointerover", (event) => {
+  const star = event.target.closest(".rating-star");
+  if (!star) return;
+  setRatingPreview(star.dataset.score);
+});
+
+$("#ratingStars").addEventListener("mouseover", (event) => {
+  const star = event.target.closest(".rating-star");
+  if (!star) return;
+  setRatingPreview(star.dataset.score);
+});
+
+$("#ratingStars").addEventListener("pointerleave", () => {
+  setRatingPreview(0);
+});
+
+$("#ratingStars").addEventListener("click", async (event) => {
+  const star = event.target.closest(".rating-star");
+  if (!star || !state.pendingRatingMovieId) return;
+  try {
+    await submitRating(state.pendingRatingMovieId, star.dataset.score);
+  } catch (error) {
+    toast(error.message);
+  }
 });
 
 $("#loginForm").addEventListener("submit", async (event) => {
