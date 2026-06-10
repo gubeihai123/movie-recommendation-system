@@ -1,0 +1,15 @@
+import os
+
+from movie_recommender import create_app
+
+
+app = create_app()
+
+
+if __name__ == "__main__":
+    app.run(
+        host=os.getenv("HOST", "127.0.0.1"),
+        port=int(os.getenv("PORT", "5000")),
+        debug=os.getenv("FLASK_DEBUG", "1") == "1",
+        use_reloader=False,
+    )
