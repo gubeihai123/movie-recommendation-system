@@ -128,7 +128,7 @@
         <aside class="panel profile-panel">
           <div class="profile-card">
             <div class="avatar"></div>
-            <h2 id="profileName">user001</h2>
+            <h2 id="profileName">未登录</h2>
             <p id="profileText">登录后查看个人行为画像</p>
           </div>
           <div class="factor-list">
@@ -273,16 +273,20 @@
       <form id="loginForm">
         <label>
           <span>用户名</span>
-          <input name="username" value="user001" autocomplete="username">
+          <input name="username" minlength="3" maxlength="50" autocomplete="username" placeholder="请输入用户名" required>
         </label>
         <label id="emailField" hidden>
           <span>邮箱</span>
-          <input name="email" type="email" value="newuser@example.com" autocomplete="email">
+          <input name="email" type="email" maxlength="100" autocomplete="email" placeholder="例如 name@example.com">
         </label>
         <label>
           <span>密码</span>
-          <input name="password" type="password" value="password123" autocomplete="current-password">
+          <input name="password" type="password" minlength="6" autocomplete="current-password" placeholder="请输入密码" required>
         </label>
+        <div class="form-rules" id="registerRules" hidden>
+          <span>注册要求</span>
+          <p>用户名至少 3 位；密码至少 6 位；邮箱需包含 @，且用户名和邮箱不能与已有账号重复。</p>
+        </div>
         <button class="primary-btn full" id="authSubmitBtn" type="submit">登录</button>
       </form>
       <button class="link-btn modal-switch" id="toggleAuthModeBtn" type="button">还没有账号？立即注册</button>

@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 
@@ -25,15 +26,17 @@ def copy_tree(src: Path, dst: Path) -> None:
 
 def main() -> None:
     DOCS.mkdir(exist_ok=True)
+    config_path = DOCS / "static" / "js" / "config.js"
+    existing_config = config_path.read_text(encoding="utf-8") if config_path.exists() else ""
+    api_base = os.getenv("MOVIE_API_BASE")
     copy_tree(ROOT / "static" / "css", DOCS / "static" / "css")
     copy_tree(ROOT / "static" / "js", DOCS / "static" / "js")
     (DOCS / "index.html").write_text(render_static_index(), encoding="utf-8")
-    (DOCS / "static" / "js" / "config.js").write_text(
-        """// GitHub Pages 前端配置：部署 Render 后端后，把这里改成你的后端公网地址。
-window.MOVIE_API_BASE = "https://YOUR_RENDER_SERVICE.onrender.com";
-""",
-        encoding="utf-8",
-    )
+    if api_base:
+        config = f'// GitHub Pages 前端配置：部署 Render 后端后，把这里改成你的后端公网地址。\nwindow.MOVIE_API_BASE = "{api_base.rstrip("/")}";\n'
+    else:
+        config = existing_config or '// GitHub Pages 前端配置：部署 Render 后端后，把这里改成你的后端公网地址。\nwindow.MOVIE_API_BASE = "https://YOUR_RENDER_SERVICE.onrender.com";\n'
+    config_path.write_text(config, encoding="utf-8")
     print(f"exported GitHub Pages frontend -> {DOCS}")
 
 

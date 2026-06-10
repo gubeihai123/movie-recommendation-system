@@ -257,7 +257,7 @@ function renderSession() {
     showView("admin");
   } else {
     chip.textContent = "游客";
-    $("#profileName").textContent = "user001";
+    $("#profileName").textContent = "未登录";
     $("#profileText").textContent = "登录后查看个人行为画像。";
     $("#behaviorProfileName").textContent = "游客";
     $("#behaviorProfileText").textContent = "登录后展示你的评分、收藏和浏览记录。";
@@ -426,10 +426,13 @@ async function refreshDashboard() {
 function openLogin() {
   $("#loginTitle").textContent = "账号登录";
   $("#loginForm").dataset.mode = "login";
-  $("#loginForm").username.value = "user001";
-  $("#loginForm").password.value = "password123";
-  $("#loginForm").email.value = "newuser@example.com";
+  $("#loginForm").username.value = "";
+  $("#loginForm").password.value = "";
+  $("#loginForm").email.value = "";
+  $("#loginForm").email.required = false;
+  $("#loginForm").password.autocomplete = "current-password";
   $("#emailField").hidden = true;
+  $("#registerRules").hidden = true;
   $("#authSubmitBtn").textContent = "登录";
   $("#toggleAuthModeBtn").hidden = false;
   $("#toggleAuthModeBtn").textContent = "还没有账号？立即注册";
@@ -444,7 +447,10 @@ function openRegister() {
   $("#loginForm").username.value = "";
   $("#loginForm").email.value = "";
   $("#loginForm").password.value = "";
+  $("#loginForm").email.required = true;
+  $("#loginForm").password.autocomplete = "new-password";
   $("#emailField").hidden = false;
+  $("#registerRules").hidden = false;
   $("#authSubmitBtn").textContent = "注册并登录";
   $("#toggleAuthModeBtn").hidden = false;
   $("#toggleAuthModeBtn").textContent = "已有账号？返回登录";
