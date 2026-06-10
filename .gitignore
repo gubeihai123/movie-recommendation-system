@@ -7,4 +7,4 @@ instance/
 logs/
 *.log
 .pytest_cache/
-
+*.zip
