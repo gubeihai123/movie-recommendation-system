@@ -141,10 +141,10 @@ function hydratePosters(root = document) {
 }
 
 function initParticleBackground() {
-  if (!$("#particleCanvas") || !window.tsParticles || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!$("#tsparticles") || !window.tsParticles || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   window.tsParticles.load({
-    id: "particleCanvas",
+    id: "tsparticles",
     options: {
       fpsLimit: 60,
       detectRetina: true,
@@ -152,8 +152,8 @@ function initParticleBackground() {
       fullScreen: { enable: false },
       particles: {
         number: {
-          value: 148,
-          density: { enable: true, area: 700 },
+          value: 260,
+          density: { enable: true, area: 900 },
         },
         color: {
           value: ["#00eaff", "#8b5cf6", "#38f8a0", "#ff4fd8", "#f8fafc"],
@@ -170,38 +170,45 @@ function initParticleBackground() {
           },
         },
         opacity: {
-          value: { min: 0.36, max: 0.9 },
-          animation: { enable: true, speed: 1, minimumValue: 0.24, sync: false },
+          value: { min: 0.62, max: 1 },
+          animation: { enable: true, speed: 1.2, minimumValue: 0.45, sync: false },
         },
         size: {
-          value: { min: 1.4, max: 5.2 },
-          animation: { enable: true, speed: 1.9, minimumValue: 0.9, sync: false },
+          value: { min: 2.2, max: 8.2 },
+          animation: { enable: true, speed: 2.4, minimumValue: 1.4, sync: false },
         },
         links: {
           enable: true,
-          distance: 148,
+          distance: 170,
           color: "#00eaff",
-          opacity: 0.34,
-          width: 1.1,
+          opacity: 0.72,
+          width: 1.55,
         },
         move: {
           enable: true,
-          speed: 0.82,
+          speed: 1.18,
           direction: "none",
           random: true,
           straight: false,
           outModes: { default: "out" },
+        },
+        shadow: {
+          enable: true,
+          color: "#00eaff",
+          blur: 10,
         },
       },
       interactivity: {
         detectsOn: "window",
         events: {
           onHover: { enable: true, mode: ["grab", "repulse"] },
+          onClick: { enable: true, mode: "push" },
           resize: true,
         },
         modes: {
-          grab: { distance: 230, links: { opacity: 0.62 } },
-          repulse: { distance: 118, duration: 0.35 },
+          grab: { distance: 250, links: { opacity: 0.78 } },
+          repulse: { distance: 132, duration: 0.35 },
+          push: { quantity: 4 },
         },
       },
     },
