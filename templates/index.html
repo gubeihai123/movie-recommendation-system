@@ -39,16 +39,21 @@
         <div class="hero-copy">
           <div class="tag">ItemCF · 热门推荐 · 行为追踪 · Top-N</div>
           <h1>
-            基于协同过滤的
-            <span>智能电影推荐系统</span>
+            基于协同过滤的<span>智能电影推荐系统</span>
           </h1>
-          <p>
-            系统根据评分、收藏和浏览历史构建用户兴趣矩阵，计算电影相似度，并结合热门得分为不同用户生成个性化推荐结果。
-          </p>
           <div class="actions">
             <button class="primary-btn" id="heroRecommendBtn" type="button">进入智能推荐</button>
             <button class="secondary-btn" id="heroMoviesBtn" type="button">浏览电影库</button>
           </div>
+          <section class="daily-movie panel" aria-label="今日随机电影">
+            <div class="daily-heading">
+              <span class="eyebrow">Daily Pick</span>
+              <h2>今日随机电影</h2>
+            </div>
+            <article class="daily-movie-card" id="dailyMovieCard">
+              <div class="empty-state">正在抽取今日电影</div>
+            </article>
+          </section>
         </div>
 
         <aside class="engine-card" aria-label="推荐引擎状态">

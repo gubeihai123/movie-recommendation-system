@@ -399,6 +399,39 @@ async function loadMovieSummary() {
   $("#avgRating").textContent = first ? fmt(first.avg_rating, 1) : "0.0";
 }
 
+function dailyMovieHtml(item) {
+  const movieId = item.movie_id;
+  const category = item.category_name || "未分类";
+  const posterUrl = item.poster_url || "";
+  const posterStyle = posterUrl
+    ? `background-image:url('${assetUrl(posterUrl).replace(/'/g, "%27")}');`
+    : fallbackPosterStyle(movieId);
+
+  return `
+    <div class="daily-poster" style="${posterStyle}"></div>
+    <div class="daily-info">
+      <span class="daily-type">${escapeHtml(category)}</span>
+      <h3>${escapeHtml(item.title || "未命名电影")}</h3>
+      <span class="daily-rating">评分 ${fmt(item.avg_rating, 1)} · ${item.rating_count || 0} 人评分</span>
+    </div>
+    <button class="primary-btn" data-action="detail" data-id="${movieId}" type="button">浏览</button>
+  `;
+}
+
+async function loadDailyMovie() {
+  const summary = await api("/api/movies?page=1&page_size=1");
+  const total = Number(summary.total || 0);
+  if (!total) {
+    $("#dailyMovieCard").innerHTML = empty("暂无可展示电影");
+    return;
+  }
+  const daySeed = Math.floor(Date.now() / 86400000);
+  const page = (daySeed % total) + 1;
+  const data = await api(`/api/movies?page=${page}&page_size=1`);
+  const movie = data.items?.[0] || summary.items?.[0];
+  $("#dailyMovieCard").innerHTML = movie ? dailyMovieHtml(movie) : empty("暂无可展示电影");
+}
+
 async function loadHot() {
   const data = await api("/api/recommendations/hot?limit=6");
   $("#hotList").innerHTML = (data.items || [])
@@ -495,7 +528,7 @@ async function loadAdminStats() {
 }
 
 async function refreshDashboard() {
-  await Promise.all([loadCategories(), loadHot(), loadMovieSummary()]);
+  await Promise.all([loadCategories(), loadHot(), loadMovieSummary(), loadDailyMovie()]);
   await loadMe();
   if (state.user) {
     await loadBehaviorSummary();
