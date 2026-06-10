@@ -41,6 +41,8 @@ def main() -> None:
     database = os.getenv("DB_NAME", "movie_recommendation_db")
 
     sql = SCHEMA_PATH.read_text(encoding="utf-8")
+    if database != "movie_recommendation_db":
+        sql = sql.replace("movie_recommendation_db", database)
     if args.reset:
         sql = f"DROP DATABASE IF EXISTS `{database}`;\n" + sql
 
