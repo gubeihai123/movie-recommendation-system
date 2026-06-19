@@ -3,6 +3,7 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
 
 (() => {
   const API = window.MOVIE_API_BASE;
+  const AUTH_TOKEN_KEY = "movie_recsys_auth_token";
   const movies = [
     [1, "阿甘正传", "/static/posters/movie_001.jpg"],
     [2, "教父", "/static/posters/movie_002.jpg"],
@@ -17,6 +18,21 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
   ];
   const $ = (selector) => document.querySelector(selector);
   const poster = (url) => /^https?:\/\//i.test(url) ? url : `${API}${url}`;
+
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = (input, init = {}) => {
+    const url = typeof input === "string" ? input : input?.url || "";
+    const absoluteUrl = /^https?:\/\//i.test(url) ? url : `${API}${url.startsWith("/") ? url : `/${url}`}`;
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!absoluteUrl.startsWith(API) || !token) return nativeFetch(input, init);
+
+    const headers = new Headers(init.headers || {});
+    if (!headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
+    return nativeFetch(input, { ...init, headers }).then((response) => {
+      if (absoluteUrl.includes("/api/auth/logout")) localStorage.removeItem(AUTH_TOKEN_KEY);
+      return response;
+    });
+  };
 
   function transform(index, total) {
     const angle = (index / total) * Math.PI * 2;
@@ -92,12 +108,15 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
 
     try {
       if (mode === "register") {
-        await requestJson("/api/auth/register", payload);
+        const data = await requestJson("/api/auth/register", payload);
+        if (data.token) localStorage.setItem(AUTH_TOKEN_KEY, data.token);
       } else {
         try {
-          await requestJson("/api/auth/login", payload);
+          const data = await requestJson("/api/auth/login", payload);
+          if (data.token) localStorage.setItem(AUTH_TOKEN_KEY, data.token);
         } catch (userError) {
-          await requestJson("/api/auth/admin/login", payload);
+          const data = await requestJson("/api/auth/admin/login", payload);
+          if (data.token) localStorage.setItem(AUTH_TOKEN_KEY, data.token);
         }
       }
       if (message) message.textContent = "登录成功，正在刷新页面...";
