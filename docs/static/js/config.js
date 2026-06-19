@@ -19,17 +19,40 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
   const $ = (selector) => document.querySelector(selector);
   const poster = (url) => /^https?:\/\//i.test(url) ? url : `${API}${url}`;
 
+  function setHidden(selector, hidden) {
+    const el = $(selector);
+    if (el) el.hidden = hidden;
+  }
+
+  function renderTokenSession() {
+    const loggedIn = Boolean(localStorage.getItem(AUTH_TOKEN_KEY));
+    setHidden("#openLoginBtn", loggedIn);
+    setHidden("#openRegisterBtn", loggedIn);
+    setHidden("#logoutBtn", !loggedIn);
+    setHidden("#heroRecommendBtn", !loggedIn);
+  }
+
   const nativeFetch = window.fetch.bind(window);
   window.fetch = (input, init = {}) => {
     const url = typeof input === "string" ? input : input?.url || "";
-    const absoluteUrl = /^https?:\/\//i.test(url) ? url : `${API}${url.startsWith("/") ? url : `/${url}`}`;
+    let absoluteUrl = /^https?:\/\//i.test(url) ? url : `${API}${url.startsWith("/") ? url : `/${url}`}`;
+    if (absoluteUrl.startsWith(API) && absoluteUrl.includes("/api/movies")) {
+      const cappedUrl = new URL(absoluteUrl);
+      const pageSize = Number(cappedUrl.searchParams.get("page_size") || 0);
+      if (pageSize > 24) cappedUrl.searchParams.set("page_size", "18");
+      absoluteUrl = cappedUrl.toString();
+      input = absoluteUrl;
+    }
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!absoluteUrl.startsWith(API) || !token) return nativeFetch(input, init);
 
     const headers = new Headers(init.headers || {});
     if (!headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
     return nativeFetch(input, { ...init, headers }).then((response) => {
-      if (absoluteUrl.includes("/api/auth/logout")) localStorage.removeItem(AUTH_TOKEN_KEY);
+      if (absoluteUrl.includes("/api/auth/logout")) {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        renderTokenSession();
+      }
       return response;
     });
   };
@@ -46,10 +69,10 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
   function drawFallbackSphere() {
     const holder = $("#movieSphere");
     if (!holder || holder.children.length) return;
-    holder.innerHTML = movies.map((movie, index) => `
+    holder.innerHTML = movies.slice(0, 6).map((movie, index) => `
       <button class="sphere-card" type="button" data-gallery-id="${movie[0]}"
         style="--sphere-transform:${transform(index, movies.length)}; --arc-transform:${transform(index, movies.length)}">
-        <img src="${poster(movie[2])}" alt="${movie[1]}" loading="eager">
+        <img src="${poster(movie[2])}" alt="${movie[1]}" loading="${index < 3 ? "eager" : "lazy"}" decoding="async">
       </button>
     `).join("");
   }
@@ -120,6 +143,7 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
         }
       }
       if (message) message.textContent = "登录成功，正在刷新页面...";
+      renderTokenSession();
       window.setTimeout(() => {
         const url = new URL(window.location.href);
         url.searchParams.set("v", Date.now().toString());
@@ -132,6 +156,7 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
   }
 
   drawFallbackSphere();
+  renderTokenSession();
   $("#openLoginBtn")?.addEventListener("click", () => openAuth(false));
   $("#openRegisterBtn")?.addEventListener("click", () => openAuth(true));
   $("#toggleAuthModeBtn")?.addEventListener("click", () => openAuth($("#loginForm")?.dataset.mode !== "register"));
