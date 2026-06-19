@@ -60,10 +60,63 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
     if ($("#heroRecommendBtn")) $("#heroRecommendBtn").hidden = false;
   }
 
+  async function requestJson(path, payload) {
+    const response = await fetch(`${API}${path}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || "请求失败");
+    return data;
+  }
+
+  async function submitAuth(event) {
+    const form = event.target;
+    if (!form || form.id !== "loginForm") return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const mode = form.dataset.mode || "login";
+    const payload = {
+      username: form.username.value.trim(),
+      password: form.password.value,
+    };
+    if (mode === "register") payload.email = form.email.value.trim();
+
+    const message = $("#loginMessage");
+    const button = $("#authSubmitBtn");
+    if (message) message.textContent = mode === "register" ? "正在注册..." : "正在登录...";
+    if (button) button.disabled = true;
+
+    try {
+      if (mode === "register") {
+        await requestJson("/api/auth/register", payload);
+      } else {
+        try {
+          await requestJson("/api/auth/login", payload);
+        } catch (userError) {
+          await requestJson("/api/auth/admin/login", payload);
+        }
+      }
+      if (message) message.textContent = "登录成功，正在刷新页面...";
+      window.setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("v", Date.now().toString());
+        window.location.replace(url.toString());
+      }, 250);
+    } catch (error) {
+      if (message) message.textContent = error.message || "登录失败";
+      if (button) button.disabled = false;
+    }
+  }
+
   drawFallbackSphere();
   $("#openLoginBtn")?.addEventListener("click", () => openAuth(false));
   $("#openRegisterBtn")?.addEventListener("click", () => openAuth(true));
   $("#toggleAuthModeBtn")?.addEventListener("click", () => openAuth($("#loginForm")?.dataset.mode !== "register"));
   $("#closeLoginBtn")?.addEventListener("click", () => $("#loginModal")?.classList.remove("open"));
   $("#homeNavBtn")?.addEventListener("click", showHome);
+  document.addEventListener("submit", submitAuth, true);
 })();
