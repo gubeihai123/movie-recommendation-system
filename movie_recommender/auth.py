@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, session
 from mysql.connector import IntegrityError
 
 from .db import execute, fetch_one
-from .security import hash_password, verify_password
+from .security import current_admin_id, current_user_id, hash_password, make_auth_token, verify_password
 
 
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
@@ -32,7 +32,7 @@ def register():
     user = fetch_one("SELECT user_id, username, email, status FROM users WHERE username = %s", (username,))
     session.clear()
     session["user_id"] = user["user_id"]
-    return jsonify({"message": "注册成功", "user": user}), 201
+    return jsonify({"message": "注册成功", "token": make_auth_token("user", user["user_id"]), "user": user}), 201
 
 
 @bp.post("/login")
@@ -59,6 +59,7 @@ def login():
     return jsonify(
         {
             "message": "登录成功",
+            "token": make_auth_token("user", user["user_id"]),
             "user": {
                 "user_id": user["user_id"],
                 "username": user["username"],
@@ -91,6 +92,7 @@ def admin_login():
     return jsonify(
         {
             "message": "管理员登录成功",
+            "token": make_auth_token("admin", admin["admin_id"]),
             "admin": {
                 "admin_id": admin["admin_id"],
                 "username": admin["username"],
@@ -108,17 +110,18 @@ def logout():
 
 @bp.get("/me")
 def me():
-    if session.get("user_id"):
+    user_id = current_user_id()
+    admin_id = current_admin_id()
+    if user_id:
         user = fetch_one(
             "SELECT user_id, username, email, status, created_at FROM users WHERE user_id = %s",
-            (session["user_id"],),
+            (user_id,),
         )
         return jsonify({"type": "user", "profile": user})
-    if session.get("admin_id"):
+    if admin_id:
         admin = fetch_one(
             "SELECT admin_id, username, role, created_at FROM admins WHERE admin_id = %s",
-            (session["admin_id"],),
+            (admin_id,),
         )
         return jsonify({"type": "admin", "profile": admin})
     return jsonify({"type": "guest", "profile": None})
-
