@@ -3,231 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieMind CF | 智能电影推荐系统</title>
-  <link rel="preconnect" href="https://upload.wikimedia.org">
-  <link rel="preconnect" href="https://commons.wikimedia.org">
-  <link rel="dns-prefetch" href="//upload.wikimedia.org">
-  <link rel="dns-prefetch" href="//commons.wikimedia.org">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <title>Movie Recsys</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=20260619e">
 </head>
 <body>
-  <div id="tsparticles" aria-hidden="true"></div>
-  <header class="navbar">
-    <button class="brand brand-button" type="button" data-view="home" aria-label="MovieMind CF 首页">
-      <span class="brand-mark"></span>
-      <span>MovieMind CF</span>
-    </button>
-
-    <nav class="nav-links" aria-label="主导航">
-      <button class="nav-tab active" type="button" data-view="home">首页</button>
-      <button class="nav-tab" type="button" data-view="recommend">智能推荐</button>
-      <button class="nav-tab" type="button" data-view="movies">电影库</button>
-      <button class="nav-tab" type="button" data-view="behavior">我的行为</button>
-    </nav>
-
+  <header class="topbar">
+    <button class="brand-button" type="button" data-view="home" aria-label="Movie Recsys 首页">Movie Recsys</button>
     <div class="top-actions">
-      <span class="user-chip" id="userChip">游客</span>
-      <button class="ghost-btn" id="logoutBtn" type="button" hidden>退出</button>
-      <button class="login-btn" id="openLoginBtn" type="button">登录</button>
-      <button class="secondary-btn compact-btn" id="openRegisterBtn" type="button">注册</button>
+      <span class="user-chip" id="userChip" hidden>游客</span>
+      <button class="glass-btn" id="openLoginBtn" type="button">登录</button>
+      <button class="glass-btn" id="openRegisterBtn" type="button">注册</button>
+      <button class="glass-btn" id="homeNavBtn" type="button" data-view="home" hidden>首页</button>
+      <button class="glass-btn" id="logoutBtn" type="button" hidden>退出</button>
+      <button class="glass-btn accent" id="heroRecommendBtn" type="button" hidden>智能推荐</button>
     </div>
   </header>
 
-  <main class="shell">
+  <main class="app-shell">
     <section class="view active" id="view-home" data-view-panel="home">
-      <div class="hero">
-        <div class="hero-copy">
-          <div class="tag">ItemCF · 热门推荐 · 行为追踪 · Top-N</div>
-          <h1>
-            基于协同过滤的<span>智能电影推荐系统</span>
-          </h1>
-          <div class="actions">
-            <button class="primary-btn" id="heroRecommendBtn" type="button">进入智能推荐</button>
-            <button class="secondary-btn" id="heroMoviesBtn" type="button">浏览电影库</button>
-          </div>
-          <section class="daily-movie panel" aria-label="今日随机电影">
-            <div class="daily-heading">
-              <span class="eyebrow">Daily Pick</span>
-              <h2>今日随机电影</h2>
+      <section class="gallery-home" aria-label="电影封面画廊">
+        <h1 class="split-title" aria-label="Movie Recsys">
+          <span>Movie</span>
+          <span>Recsys</span>
+        </h1>
+        <div class="gallery-stage" id="galleryStage">
+          <div class="movie-sphere" id="movieSphere" aria-label="电影封面球"></div>
+          <article class="focus-movie-card" id="focusMovieCard" hidden>
+            <div class="focus-poster" id="focusPoster"></div>
+            <div class="focus-copy">
+              <span id="focusCategory">电影</span>
+              <h2 id="focusTitle">选择一部电影</h2>
+              <p id="focusRating">评分 0.0</p>
+              <button class="glass-btn accent" id="focusBrowseBtn" type="button" data-action="detail" data-id="">浏览</button>
             </div>
-            <article class="daily-movie-card" id="dailyMovieCard">
-            </article>
-          </section>
+            <button class="glass-btn accent focus-back-btn" id="closeFocusBtn" type="button">返回</button>
+          </article>
         </div>
-
-        <aside class="engine-card" aria-label="推荐引擎状态">
-          <div class="engine-head">
-            <span>Recommendation Engine</span>
-            <b>ONLINE</b>
-          </div>
-          <div class="radar">
-            <div class="score-bubble">
-              <strong id="bestScore">0.00</strong>
-              <span>当前最高推荐分</span>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <section class="stats" aria-label="系统统计">
-        <article class="stat-card">
-          <span>电影资产</span>
-          <strong id="movieCount">--</strong>
-        </article>
-        <article class="stat-card">
-          <span>用户行为</span>
-          <strong id="behaviorCount">--</strong>
-        </article>
-        <article class="stat-card">
-          <span>平均评分</span>
-          <strong id="avgRating">--</strong>
-        </article>
-        <article class="stat-card">
-          <span>推荐候选集</span>
-          <strong id="recCount">Top-N</strong>
-        </article>
-      </section>
-
-      <section class="home-preview">
-        <article class="panel">
-          <div class="section-title">
-            <div>
-              <h2>热门榜单</h2>
-              <p>冷启动场景下使用平均分、浏览量和收藏量排序</p>
-            </div>
-            <button class="link-btn" id="reloadHotBtn" type="button">更新</button>
-          </div>
-          <div id="hotList" class="hot-list"></div>
-        </article>
-        <article class="panel">
-          <h2>推荐解释</h2>
-          <div class="explain-list">
-            <article>
-              <strong>行为分数</strong>
-              <p>评分、收藏、浏览被转换为统一兴趣分数。</p>
-            </article>
-            <article>
-              <strong>ItemCF 相似度</strong>
-              <p>使用用户-电影交互矩阵计算电影间余弦相似度。</p>
-            </article>
-            <article>
-              <strong>冷启动策略</strong>
-              <p>行为不足时按热门得分生成基础推荐。</p>
-            </article>
-          </div>
-        </article>
       </section>
     </section>
 
     <section class="view" id="view-recommend" data-view-panel="recommend">
-      <div class="page-header">
-        <div>
-          <span class="eyebrow">Recommendation</span>
-          <h1>智能推荐</h1>
-          <p>登录普通用户后生成个性化 Top-N 推荐结果。</p>
+      <section class="recommend-page">
+        <div class="recommend-loading" id="recommendLoading">
+          <h1>正在智能推荐ing</h1>
+          <div class="rec-progress" aria-label="推荐加载进度">
+            <span id="recommendProgressBar"></span>
+          </div>
+          <p id="recommendProgressText">1%</p>
+          <b>loading</b>
         </div>
-        <button class="primary-btn" id="refreshRecommendBtn" type="button">生成推荐</button>
-      </div>
-
-      <div class="recommend-layout">
-        <aside class="panel profile-panel">
-          <div class="profile-card">
-            <div class="avatar"></div>
-            <h2 id="profileName">未登录</h2>
-            <p id="profileText">登录后查看个人行为画像</p>
-          </div>
-          <div class="factor-list">
-            <div class="factor-row">
-              <div><span>评分权重</span><b id="ratingWeight">0%</b></div>
-              <meter min="0" max="100" value="0" id="ratingMeter"></meter>
-            </div>
-            <div class="factor-row">
-              <div><span>收藏权重</span><b id="favoriteWeight">0%</b></div>
-              <meter min="0" max="100" value="0" id="favoriteMeter"></meter>
-            </div>
-            <div class="factor-row">
-              <div><span>浏览权重</span><b id="browseWeight">0%</b></div>
-              <meter min="0" max="100" value="0" id="browseMeter"></meter>
-            </div>
-            <div class="factor-row">
-              <div><span>相似召回</span><b id="similarityWeight">86%</b></div>
-              <meter min="0" max="100" value="86"></meter>
-            </div>
-          </div>
-        </aside>
-
-        <section class="panel main-panel">
-          <div class="section-title">
-            <div>
-              <h2>为你推荐</h2>
-              <p>基于 ItemCF 相似度矩阵生成</p>
-            </div>
-          </div>
-          <div class="movie-grid" id="recommendGrid"></div>
+        <section class="recommend-showcase" id="recommendShowcase" hidden>
+          <h1>Top 5 For You</h1>
+          <div class="recommend-rail" id="recommendGrid"></div>
         </section>
-      </div>
-    </section>
-
-    <section class="view" id="view-movies" data-view-panel="movies">
-      <div class="page-header">
-        <div>
-          <span class="eyebrow">Catalog</span>
-          <h1>电影库</h1>
-          <p>浏览真实电影、查看简介、评分、收藏和记录浏览行为。</p>
-        </div>
-        <form class="search-bar" id="searchForm">
-          <select id="categorySelect" aria-label="分类筛选">
-            <option value="">全部分类</option>
-          </select>
-          <input id="searchInput" type="search" placeholder="搜索电影名称">
-          <button class="primary-btn small" type="submit">搜索</button>
-        </form>
-      </div>
-      <section class="panel catalog-panel">
-        <div class="movie-grid catalog-grid" id="movieGrid"></div>
-        <div class="load-more-row">
-          <button class="secondary-btn" id="loadMoreMoviesBtn" type="button" hidden>加载更多</button>
-        </div>
-      </section>
-    </section>
-
-    <section class="view" id="view-behavior" data-view-panel="behavior">
-      <div class="page-header">
-        <div>
-          <span class="eyebrow">Profile</span>
-          <h1>我的行为</h1>
-          <p>集中查看评分、收藏和最近浏览记录。</p>
-        </div>
-        <button class="secondary-btn" id="behaviorLoginBtn" type="button">登录查看</button>
-      </div>
-
-      <section class="behavior-layout">
-        <article class="panel profile-summary">
-          <div class="profile-card">
-            <div class="avatar"></div>
-            <h2 id="behaviorProfileName">游客</h2>
-            <p id="behaviorProfileText">登录后展示你的评分、收藏和浏览记录。</p>
-          </div>
-        </article>
-        <article class="panel behavior-panel">
-          <h2>我的评分</h2>
-          <div class="behavior-list" id="ratingList"></div>
-        </article>
-        <article class="panel behavior-panel">
-          <h2>我的收藏</h2>
-          <div class="behavior-list" id="favoriteList"></div>
-        </article>
-        <article class="panel behavior-panel">
-          <h2>最近浏览</h2>
-          <div class="behavior-list" id="browseList"></div>
-        </article>
       </section>
     </section>
 
     <section class="view" id="view-detail" data-view-panel="detail">
-      <div class="detail-hero" id="detailHero">
-        <button class="secondary-btn detail-back" id="backToMoviesBtn" type="button">返回电影库</button>
-        <div class="detail-hero-inner">
+      <section class="detail-page" id="detailHero">
+        <button class="glass-btn detail-back" id="backToMoviesBtn" type="button">返回</button>
+        <div class="detail-layout">
           <div class="detail-poster" id="detailPoster"></div>
           <div class="detail-copy">
             <span class="eyebrow" id="detailCategory">电影</span>
@@ -248,26 +83,45 @@
             </div>
             <p id="detailDescription"></p>
             <div class="detail-actions">
-              <button class="primary-btn" id="detailRateBtn" data-action="rate" data-id="" type="button">评分</button>
-              <button class="secondary-btn" id="detailFavoriteBtn" data-action="favorite" data-id="" type="button">收藏</button>
+              <button class="glass-btn accent" id="detailRateBtn" data-action="rate" data-id="" type="button">评分</button>
+              <button class="glass-btn" id="detailFavoriteBtn" data-action="favorite" data-id="" type="button">收藏</button>
               <span id="detailUserScore" class="detail-note">未评分</span>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </section>
 
-    <section class="view" id="view-admin" data-view-panel="admin">
-      <div class="page-header">
-        <div>
-          <span class="eyebrow">Admin</span>
-          <h1>管理后台</h1>
-          <p>管理员账号登录后自动进入该界面。</p>
-        </div>
-      </div>
-      <section class="panel admin-panel">
-        <div class="admin-grid" id="adminStats"></div>
-      </section>
+    <section class="view utility-view" id="view-movies" data-view-panel="movies">
+      <form class="search-bar" id="searchForm">
+        <select id="categorySelect" aria-label="分类筛选">
+          <option value="">全部分类</option>
+        </select>
+        <input id="searchInput" type="search" placeholder="搜索电影名称">
+        <button class="glass-btn accent small" type="submit">搜索</button>
+      </form>
+      <div class="movie-grid catalog-grid" id="movieGrid"></div>
+      <button class="glass-btn" id="loadMoreMoviesBtn" type="button" hidden>加载更多</button>
+    </section>
+
+    <section class="view utility-view" id="view-behavior" data-view-panel="behavior">
+      <button class="glass-btn" id="behaviorLoginBtn" type="button">登录查看</button>
+      <h2 id="profileName">未登录</h2>
+      <p id="profileText">登录后查看个人行为画像。</p>
+      <h2 id="behaviorProfileName">游客</h2>
+      <p id="behaviorProfileText">登录后展示你的评分、收藏和浏览记录。</p>
+      <div id="ratingList"></div>
+      <div id="favoriteList"></div>
+      <div id="browseList"></div>
+      <meter min="0" max="100" value="0" id="ratingMeter"></meter><span id="ratingWeight">0%</span>
+      <meter min="0" max="100" value="0" id="favoriteMeter"></meter><span id="favoriteWeight">0%</span>
+      <meter min="0" max="100" value="0" id="browseMeter"></meter><span id="browseWeight">0%</span>
+      <span id="behaviorCount">--</span>
+    </section>
+
+    <section class="view utility-view" id="view-admin" data-view-panel="admin">
+      <h1>管理后台</h1>
+      <div class="admin-grid" id="adminStats"></div>
     </section>
   </main>
 
@@ -292,7 +146,7 @@
           <span>注册要求</span>
           <p>用户名至少 3 位；密码至少 6 位；邮箱需包含 @，且用户名和邮箱不能与已有账号重复。</p>
         </div>
-        <button class="primary-btn full" id="authSubmitBtn" type="submit">登录</button>
+        <button class="glass-btn accent full" id="authSubmitBtn" type="submit">登录</button>
       </form>
       <button class="link-btn modal-switch" id="toggleAuthModeBtn" type="button">还没有账号？立即注册</button>
       <p class="form-note" id="loginMessage"></p>
@@ -317,7 +171,6 @@
 
   <div class="toast" id="toast" role="status"></div>
 
-  <script src="{{ url_for('static', filename='js/tsparticles.bundle.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=20260619e"></script>
 </body>
 </html>

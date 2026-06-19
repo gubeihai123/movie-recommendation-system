@@ -12,10 +12,7 @@ def render_static_index() -> str:
     html = html.replace("{{ url_for('static', filename='css/app.css') }}", "static/css/app.css")
     html = html.replace("{{ url_for('static', filename='js/tsparticles.bundle.min.js') }}", "static/js/tsparticles.bundle.min.js")
     html = html.replace("{{ url_for('static', filename='js/app.js') }}", "static/js/app.js")
-    html = html.replace(
-        '<script src="static/js/app.js"></script>',
-        '<script src="static/js/config.js"></script>\n  <script src="static/js/app.js"></script>',
-    )
+    html = html.replace('<script src="static/js/app.js', '<script src="static/js/config.js"></script>\n  <script src="static/js/app.js')
     return html
 
 
@@ -32,6 +29,8 @@ def main() -> None:
     api_base = os.getenv("MOVIE_API_BASE")
     copy_tree(ROOT / "static" / "css", DOCS / "static" / "css")
     copy_tree(ROOT / "static" / "js", DOCS / "static" / "js")
+    if (ROOT / "static" / "images").exists():
+        copy_tree(ROOT / "static" / "images", DOCS / "static" / "images")
     (DOCS / "index.html").write_text(render_static_index(), encoding="utf-8")
     if api_base:
         config = f'// GitHub Pages 前端配置：部署 Render 后端后，把这里改成你的后端公网地址。\nwindow.MOVIE_API_BASE = "{api_base.rstrip("/")}";\n'
