@@ -15,6 +15,9 @@ const API_BASE = (window.MOVIE_API_BASE || "").replace(/\/$/, "");
 const AUTH_TOKEN_KEY = "movie_recsys_auth_token";
 const GALLERY_LIMIT = 18;
 const GALLERY_REQUEST_SIZE = 24;
+if (localStorage.getItem(AUTH_TOKEN_KEY)) {
+  state.user = { username: "已登录" };
+}
 const fallbackGalleryMovies = [
   { movie_id: 1, title: "阿甘正传", category_name: "爱情", avg_rating: 4.0, rating_count: 5, poster_url: "/static/posters/movie_001.jpg" },
   { movie_id: 2, title: "教父", category_name: "悬疑", avg_rating: 4.0, rating_count: 9, poster_url: "/static/posters/movie_002.jpg" },
@@ -733,11 +736,12 @@ $("#searchForm").addEventListener("submit", async (event) => {
 
 async function boot() {
   renderGallery(fallbackGalleryMovies);
+  renderSession();
   await Promise.all([
+    loadMe().catch((error) => toast(error.message)),
     loadCategories().catch((error) => toast(error.message)),
     loadGalleryMovies().catch((error) => toast(error.message)),
   ]);
-  await loadMe();
 }
 
 boot().catch((error) => toast(error.message));
