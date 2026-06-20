@@ -17,7 +17,13 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
     [77, "龙猫", "/static/posters/movie_077.jpg"]
   ];
   const $ = (selector) => document.querySelector(selector);
-  const poster = (url) => /^https?:\/\//i.test(url) ? url : `${API}${url}`;
+  const poster = (url) => {
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith("/static/posters/")) {
+      return new URL(url.slice(1), document.baseURI).href;
+    }
+    return `${API}${url}`;
+  };
 
   function setHidden(selector, hidden) {
     const el = $(selector);

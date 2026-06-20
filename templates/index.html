@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Movie Recsys</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=20260619h">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=20260619i">
 </head>
 <body>
   <header class="topbar">
@@ -204,10 +204,10 @@
       function drawFallbackSphere() {
         const holder = $("#movieSphere");
         if (!holder || holder.children.length) return;
-        holder.innerHTML = movies.map((movie, index) => `
+        holder.innerHTML = movies.slice(0, 6).map((movie, index) => `
           <button class="sphere-card" type="button" data-gallery-id="${movie[0]}"
             style="--sphere-transform:${sphereTransform(index, movies.length)}; --arc-transform:${sphereTransform(index, movies.length)}">
-            <img src="${poster(movie[2])}" alt="${movie[1]}" loading="eager">
+            <img src="${poster(movie[2])}" alt="${movie[1]}" loading="${index < 3 ? "eager" : "lazy"}" decoding="async">
           </button>
         `).join("");
       }
@@ -244,6 +244,6 @@
       });
     })();
   </script>
-  <script src="{{ url_for('static', filename='js/app.js') }}?v=20260619h"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=20260619i"></script>
 </body>
 </html>

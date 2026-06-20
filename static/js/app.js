@@ -12,6 +12,21 @@ const state = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const API_BASE = (window.MOVIE_API_BASE || "").replace(/\/$/, "");
+const AUTH_TOKEN_KEY = "movie_recsys_auth_token";
+const GALLERY_LIMIT = 18;
+const GALLERY_REQUEST_SIZE = 24;
+const fallbackGalleryMovies = [
+  { movie_id: 1, title: "阿甘正传", category_name: "爱情", avg_rating: 4.0, rating_count: 5, poster_url: "/static/posters/movie_001.jpg" },
+  { movie_id: 2, title: "教父", category_name: "悬疑", avg_rating: 4.0, rating_count: 9, poster_url: "/static/posters/movie_002.jpg" },
+  { movie_id: 4, title: "黑客帝国", category_name: "悬疑", avg_rating: 3.7, rating_count: 6, poster_url: "/static/posters/movie_004.png" },
+  { movie_id: 7, title: "千与千寻", category_name: "动画", avg_rating: 3.7, rating_count: 12, poster_url: "/static/posters/movie_007.png" },
+  { movie_id: 9, title: "低俗小说", category_name: "悬疑", avg_rating: 4.0, rating_count: 13, poster_url: "/static/posters/movie_009.jpg" },
+  { movie_id: 14, title: "盗梦空间", category_name: "悬疑", avg_rating: 4.2, rating_count: 11, poster_url: "/static/posters/movie_014.jpg" },
+  { movie_id: 17, title: "机器人总动员", category_name: "动画", avg_rating: 4.0, rating_count: 9, poster_url: "/static/posters/movie_017.jpg" },
+  { movie_id: 27, title: "星际穿越", category_name: "科幻", avg_rating: 4.1, rating_count: 10, poster_url: "/static/posters/movie_027.jpg" },
+  { movie_id: 36, title: "寻梦环游记", category_name: "动画", avg_rating: 4.0, rating_count: 8, poster_url: "/static/posters/movie_036.jpg" },
+  { movie_id: 77, title: "龙猫", category_name: "动画", avg_rating: 4.0, rating_count: 7, poster_url: "/static/posters/movie_077.jpg" },
+];
 
 function apiUrl(url) {
   if (/^https?:\/\//i.test(url)) return url;
@@ -20,13 +35,21 @@ function apiUrl(url) {
 
 function assetUrl(url = "") {
   if (!url || /^https?:\/\//i.test(url) || !API_BASE) return url;
+  if (url.startsWith("/static/posters/")) {
+    return new URL(url.slice(1), document.baseURI).href;
+  }
   return `${API_BASE}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
 async function api(url, options = {}) {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   const response = await fetch(apiUrl(url), {
     credentials: API_BASE ? "include" : "same-origin",
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
     ...options,
   });
   const data = await response.json().catch(() => ({}));
@@ -145,11 +168,15 @@ function showView(view) {
 function renderTopActions() {
   const loggedIn = Boolean(state.user);
   const adminLoggedIn = Boolean(state.admin);
-  $("#openLoginBtn").hidden = loggedIn || adminLoggedIn;
-  $("#openRegisterBtn").hidden = loggedIn || adminLoggedIn;
-  $("#homeNavBtn").hidden = !loggedIn || state.currentView !== "recommend";
-  $("#logoutBtn").hidden = !loggedIn && !adminLoggedIn;
-  $("#heroRecommendBtn").hidden = !loggedIn || state.currentView === "recommend";
+  const setHidden = (selector, value) => {
+    const el = $(selector);
+    if (el) el.hidden = value;
+  };
+  setHidden("#openLoginBtn", loggedIn || adminLoggedIn);
+  setHidden("#openRegisterBtn", loggedIn || adminLoggedIn);
+  setHidden("#homeNavBtn", !loggedIn || state.currentView !== "recommend");
+  setHidden("#logoutBtn", !loggedIn && !adminLoggedIn);
+  setHidden("#heroRecommendBtn", !loggedIn || state.currentView === "recommend");
 }
 
 function sphereTransform(i, total) {
@@ -183,15 +210,16 @@ function arcTransform(i) {
 
 function renderGallery(movies) {
   const holder = $("#movieSphere");
-  const usable = movies.filter((item) => item.poster_url).slice(0, 39);
-  state.galleryMovies = usable.length ? usable : movies.slice(0, 39);
+  const usable = movies.filter((item) => item.poster_url).slice(0, GALLERY_LIMIT);
+  state.galleryMovies = usable.length ? usable : movies.slice(0, GALLERY_LIMIT);
   const total = Math.max(state.galleryMovies.length, 1);
   holder.innerHTML = state.galleryMovies.map((item, index) => {
     const isFar = index % 5 === 0 ? " is-far" : "";
     return `
       <button class="sphere-card${isFar}" type="button" data-gallery-id="${item.movie_id}"
         style="--sphere-transform:${sphereTransform(index, total)}; --arc-transform:${arcTransform(index)}">
-        <img src="${escapeHtml(posterUrl(item))}" alt="${escapeHtml(item.title || "电影封面"})" loading="eager">
+        <img src="${escapeHtml(posterUrl(item))}" alt="${escapeHtml(item.title || "电影封面")}"
+          loading="${index < 6 ? "eager" : "lazy"}" decoding="async" fetchpriority="${index < 6 ? "high" : "low"}">
       </button>
     `;
   }).join("");
@@ -233,8 +261,13 @@ async function closeFocusMovie() {
 }
 
 async function loadGalleryMovies() {
-  const data = await api("/api/movies?page=1&page_size=80");
-  renderGallery(data.items || []);
+  try {
+    const data = await api(`/api/movies?page=1&page_size=${GALLERY_REQUEST_SIZE}`);
+    renderGallery(data.items?.length ? data.items : fallbackGalleryMovies);
+  } catch (error) {
+    renderGallery(fallbackGalleryMovies);
+    throw error;
+  }
 }
 
 function recCard(item, index) {
@@ -414,6 +447,7 @@ async function loadMe() {
     state.admin = data.profile;
     state.user = null;
   } else {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     state.user = null;
     state.admin = null;
   }
@@ -607,6 +641,7 @@ document.addEventListener("click", async (event) => {
     }
     if (target.id === "logoutBtn") {
       await api("/api/auth/logout", { method: "POST", body: "{}" });
+      localStorage.removeItem(AUTH_TOKEN_KEY);
       state.user = null;
       state.admin = null;
       renderSession();
@@ -664,6 +699,7 @@ $("#loginForm").addEventListener("submit", async (event) => {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      if (data.token) localStorage.setItem(AUTH_TOKEN_KEY, data.token);
       state.user = data.user;
       state.admin = null;
       renderSession();
@@ -674,6 +710,7 @@ $("#loginForm").addEventListener("submit", async (event) => {
     }
 
     const result = await loginWithAutoRole(payload);
+    if (result.data.token) localStorage.setItem(AUTH_TOKEN_KEY, result.data.token);
     state.user = result.type === "user" ? result.data.user : null;
     state.admin = result.type === "admin" ? result.data.admin : null;
     renderSession();
@@ -695,7 +732,11 @@ $("#searchForm").addEventListener("submit", async (event) => {
 });
 
 async function boot() {
-  await Promise.all([loadCategories(), loadGalleryMovies()]);
+  renderGallery(fallbackGalleryMovies);
+  await Promise.all([
+    loadCategories().catch((error) => toast(error.message)),
+    loadGalleryMovies().catch((error) => toast(error.message)),
+  ]);
   await loadMe();
 }
 
