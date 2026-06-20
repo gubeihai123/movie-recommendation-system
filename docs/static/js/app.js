@@ -7,6 +7,8 @@ const state = {
   pendingRatingMovieId: null,
   movieLoaded: false,
   recommendationTimer: null,
+  searchTimer: null,
+  detailReturnView: "home",
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -164,7 +166,7 @@ function showView(view) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 
   if (view !== "recommend") stopRecommendationProgress();
-  if (view === "movies" && !state.movieLoaded) loadMovies().catch((error) => toast(error.message));
+  if (view !== "movies") stopSearchProgress();
   if (view === "admin") loadAdminStats().catch((error) => toast(error.message));
 }
 
@@ -177,9 +179,10 @@ function renderTopActions() {
   };
   setHidden("#openLoginBtn", loggedIn || adminLoggedIn);
   setHidden("#openRegisterBtn", loggedIn || adminLoggedIn);
-  setHidden("#homeNavBtn", !loggedIn || state.currentView !== "recommend");
+  setHidden("#homeNavBtn", !loggedIn || state.currentView === "home");
   setHidden("#logoutBtn", !loggedIn && !adminLoggedIn);
   setHidden("#heroRecommendBtn", !loggedIn || state.currentView === "recommend");
+  setHidden("#heroSearchBtn", !loggedIn || state.currentView === "movies");
 }
 
 function sphereTransform(i, total) {
@@ -300,6 +303,19 @@ function setProgress(value) {
   $("#recommendProgressText").textContent = `${clamped}%`;
 }
 
+function stopSearchProgress() {
+  if (state.searchTimer) {
+    window.clearInterval(state.searchTimer);
+    state.searchTimer = null;
+  }
+}
+
+function setSearchProgress(value) {
+  const clamped = Math.max(1, Math.min(99, Math.round(value)));
+  $("#searchProgressBar").style.width = `${clamped}%`;
+  $("#searchProgressText").textContent = `${clamped}%`;
+}
+
 function delay(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
@@ -376,8 +392,10 @@ async function startRecommendations(refresh = true) {
   $("#recommendShowcase").hidden = false;
 }
 
-async function openMovieDetail(id) {
-  const data = await api(`/api/movies/${id}`);
+async function openMovieDetail(id, trackView = false) {
+  if (trackView) state.detailReturnView = state.currentView;
+  const suffix = trackView ? "?track_view=1" : "";
+  const data = await api(`/api/movies/${id}${suffix}`);
   const movie = data.movie;
   state.currentMovieId = movie.movie_id;
   const rating = fmt(movie.avg_rating, 1);
@@ -409,10 +427,7 @@ function movieCard(item) {
       <div class="movie-body">
         <h3>${escapeHtml(item.title || "未命名电影")}</h3>
         <p class="meta">${escapeHtml(item.category_name || "未分类")} · ★ ${fmt(item.avg_rating, 1)}</p>
-        <p class="reason">${escapeHtml(item.description || "暂无简介")}</p>
         <div class="card-actions">
-          <button class="mini-btn" data-action="rate" data-id="${item.movie_id}">评分</button>
-          <button class="mini-btn" data-action="favorite" data-id="${item.movie_id}">收藏</button>
           <button class="mini-btn" data-action="detail" data-id="${item.movie_id}">浏览</button>
         </div>
       </div>
@@ -423,22 +438,38 @@ function movieCard(item) {
 async function loadCategories() {
   const data = await api("/api/categories");
   const select = $("#categorySelect");
-  select.innerHTML = `<option value="">全部分类</option>` + (data.items || [])
+  select.innerHTML = `<option value="">全部标签</option>` + (data.items || [])
     .map((item) => `<option value="${item.category_id}">${escapeHtml(item.category_name)}</option>`)
     .join("");
 }
 
 async function loadMovies() {
+  $("#searchLoading").hidden = false;
+  $("#movieGrid").hidden = true;
+  setSearchProgress(1);
+  stopSearchProgress();
+  let progress = 1;
+  state.searchTimer = window.setInterval(() => {
+    progress = Math.min(94, progress + Math.max(1, Math.round((94 - progress) * 0.09)));
+    setSearchProgress(progress);
+  }, 90);
+
   const q = $("#searchInput").value.trim();
   const categoryId = $("#categorySelect").value;
-  const query = new URLSearchParams({ page: "1", page_size: "100" });
+  const query = new URLSearchParams({ page: "1", page_size: "40" });
   if (q) query.set("q", q);
   if (categoryId) query.set("category_id", categoryId);
-  const data = await api(`/api/movies?${query.toString()}`);
+  const [data] = await Promise.all([api(`/api/movies?${query.toString()}`), delay(900)]);
+  await Promise.allSettled((data.items || []).map((item) => preloadImage(posterUrl(item), 2600)));
+  stopSearchProgress();
+  setSearchProgress(99);
   $("#movieGrid").innerHTML = (data.items || []).length
     ? data.items.map(movieCard).join("")
     : empty("没有找到匹配的电影");
   state.movieLoaded = true;
+  await delay(240);
+  $("#searchLoading").hidden = true;
+  $("#movieGrid").hidden = false;
 }
 
 async function loadMe() {
@@ -590,7 +621,7 @@ async function handleMovieAction(target) {
   const id = target.dataset.id;
   if (!action || !id) return;
   if (action === "detail") {
-    await openMovieDetail(id);
+    await openMovieDetail(id, true);
     return;
   }
   if (!state.user) {
@@ -653,7 +684,11 @@ document.addEventListener("click", async (event) => {
       toast("已退出登录");
     }
     if (target.id === "heroRecommendBtn") await startRecommendations(true);
-    if (target.id === "backToMoviesBtn") showView("home");
+    if (target.id === "heroSearchBtn") {
+      showView("movies");
+      $("#searchInput").focus();
+    }
+    if (target.id === "backToMoviesBtn") showView(state.detailReturnView || "home");
     await handleMovieAction(target);
   } catch (error) {
     toast(error.message);
@@ -730,6 +765,10 @@ $("#searchForm").addEventListener("submit", async (event) => {
   try {
     await loadMovies();
   } catch (error) {
+    stopSearchProgress();
+    $("#searchLoading").hidden = true;
+    $("#movieGrid").hidden = false;
+    $("#movieGrid").innerHTML = empty("搜索失败，请稍后重试");
     toast(error.message);
   }
 });

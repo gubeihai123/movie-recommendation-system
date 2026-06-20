@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Movie Recsys</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=20260619i">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=20260620d">
 </head>
 <body>
   <header class="topbar">
@@ -16,6 +16,7 @@
       <button class="glass-btn" id="homeNavBtn" type="button" data-view="home" hidden>首页</button>
       <button class="glass-btn" id="logoutBtn" type="button" hidden>退出</button>
       <button class="glass-btn accent" id="heroRecommendBtn" type="button" hidden>智能推荐</button>
+      <button class="glass-btn accent" id="heroSearchBtn" type="button" hidden>电影搜索</button>
     </div>
   </header>
 
@@ -92,16 +93,25 @@
       </section>
     </section>
 
-    <section class="view utility-view" id="view-movies" data-view-panel="movies">
-      <form class="search-bar" id="searchForm">
-        <select id="categorySelect" aria-label="分类筛选">
-          <option value="">全部分类</option>
-        </select>
-        <input id="searchInput" type="search" placeholder="搜索电影名称">
-        <button class="glass-btn accent small" type="submit">搜索</button>
-      </form>
-      <div class="movie-grid catalog-grid" id="movieGrid"></div>
-      <button class="glass-btn" id="loadMoreMoviesBtn" type="button" hidden>加载更多</button>
+    <section class="view" id="view-movies" data-view-panel="movies">
+      <section class="search-page">
+        <form class="search-bar" id="searchForm">
+          <input id="searchInput" type="search" placeholder="输入电影名称" aria-label="模糊搜索电影名称">
+          <select id="categorySelect" aria-label="电影标签筛选">
+            <option value="">全部标签</option>
+          </select>
+          <button class="glass-btn accent" type="submit">搜索</button>
+        </form>
+        <div class="search-loading" id="searchLoading" hidden>
+          <h1>正在全力搜索中</h1>
+          <div class="rec-progress" aria-label="搜索加载进度">
+            <span id="searchProgressBar"></span>
+          </div>
+          <p id="searchProgressText">1%</p>
+          <b>loading</b>
+        </div>
+        <div class="movie-grid search-results" id="movieGrid" hidden></div>
+      </section>
     </section>
 
     <section class="view utility-view" id="view-behavior" data-view-panel="behavior">
@@ -244,6 +254,6 @@
       });
     })();
   </script>
-  <script src="{{ url_for('static', filename='js/app.js') }}?v=20260619i"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=20260620d"></script>
 </body>
 </html>

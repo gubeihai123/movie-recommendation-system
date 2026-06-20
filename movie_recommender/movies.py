@@ -91,6 +91,7 @@ def daily_movie():
 
 @bp.get("/movies/<int:movie_id>")
 def movie_detail(movie_id: int):
+    track_view = request.args.get("track_view") == "1"
     movie = fetch_one(
         """
         SELECT *
@@ -114,7 +115,8 @@ def movie_detail(movie_id: int):
     user_id = current_user_id()
     user_state = None
     if user_id:
-        execute("INSERT INTO browse_history(user_id, movie_id) VALUES (%s, %s)", (user_id, movie_id))
+        if track_view:
+            execute("INSERT INTO browse_history(user_id, movie_id) VALUES (%s, %s)", (user_id, movie_id))
         user_state = fetch_one(
             """
             SELECT
