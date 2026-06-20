@@ -45,7 +45,7 @@ window.MOVIE_API_BASE = "https://movie-recommendation-system-68a3.onrender.com";
     if (absoluteUrl.startsWith(API) && absoluteUrl.includes("/api/movies")) {
       const cappedUrl = new URL(absoluteUrl);
       const pageSize = Number(cappedUrl.searchParams.get("page_size") || 0);
-      if (pageSize > 24) cappedUrl.searchParams.set("page_size", "18");
+      if (pageSize > 40) cappedUrl.searchParams.set("page_size", "36");
       absoluteUrl = cappedUrl.toString();
       input = absoluteUrl;
     }

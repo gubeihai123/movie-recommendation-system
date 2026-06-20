@@ -13,8 +13,8 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const API_BASE = (window.MOVIE_API_BASE || "").replace(/\/$/, "");
 const AUTH_TOKEN_KEY = "movie_recsys_auth_token";
-const GALLERY_LIMIT = 18;
-const GALLERY_REQUEST_SIZE = 24;
+const GALLERY_LIMIT = 36;
+const GALLERY_REQUEST_SIZE = 36;
 if (localStorage.getItem(AUTH_TOKEN_KEY)) {
   state.user = { username: "已登录" };
 }
@@ -187,7 +187,7 @@ function sphereTransform(i, total) {
   const yNorm = 1 - (2 * (i + 0.5)) / total;
   const radiusAtY = Math.sqrt(1 - yNorm * yNorm);
   const theta = golden * i;
-  const radius = 380;
+  const radius = 410;
   const x = Math.cos(theta) * radiusAtY * radius;
   const y = yNorm * radius * 0.82;
   const z = Math.sin(theta) * radiusAtY * radius;
